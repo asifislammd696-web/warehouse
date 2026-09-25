@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Client Flow BD — Warehouse</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FBF7F0;
+  --white:#FFFFFF;
+  --ink:#0A0A0A;
+  --ink-soft:#555;
+  --ink-muted:#8A8A8A;
+  --line:#000;
+
+  --brand-grad:linear-gradient(90deg,#FF6B4A 0%,#FF8C5A 30%,#FFB64D 60%,#FFD96A 100%);
+  --coral:#FF6B4A;
+  --amber:#FFB64D;
+  --gold:#FFD96A;
+  --mint:#3DDC97;
+  --sky:#4EC9F1;
+  --violet:#8B6BD9;
+  --rose:#FF4F8B;
+  --lime:#A6E22E;
+  --dark:#0F0E17;
+
+  --radius:14px;
+  --shadow:6px 6px 0 #000;
+  --shadow-sm:3px 3px 0 #000;
+  --border:3px solid #000;
+  --border-thin:2px solid #000;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--ink);font-family:'Inter',system-ui,sans-serif;line-height:1.5}
+h1,h2,h3,h4,.display{font-family:'Space Grotesk','Inter',sans-serif;letter-spacing:-0.02em}
+.mono{font-family:'JetBrains Mono',monospace}
+
+/* ---------- HEADER ---------- */
+.topbar{
+  background:var(--brand-grad);
+  padding:18px 32px 14px;
+  border-bottom:var(--border);
+  box-shadow:0 3px 0 #000;
+  position:sticky;top:0;z-index:50;
+}
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.brand-name{
+  font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:22px;
+  letter-spacing:-0.02em;text-transform:uppercase;
+}
+.brand-name .hl{
+  background:var(--sky);padding:2px 10px;border:var(--border-thin);
+  box-shadow:var(--shadow-sm);border-radius:6px;display:inline-block;
+}
+.brand-tag{
+  margin-left:auto;font-size:12px;background:#000;color:#fff;
+  padding:4px 10px;border-radius:999px;font-weight:600;letter-spacing:0.05em;
+}
+.nav{display:flex;gap:8px;flex-wrap:wrap}
+.nav button{
+  font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:13px;
+  padding:8px 16px;border-radius:999px;background:#fff;color:#000;
+  border:var(--border-thin);cursor:pointer;transition:all .12s;
+}
+.nav button:hover{transform:translate(-1px,-1px);box-shadow:var(--shadow-sm)}
+.nav button.active{background:#000;color:#fff;box-shadow:var(--shadow-sm)}
+
+/* ---------- LAYOUT ---------- */
+.page{display:none;padding:32px;max-width:1400px;margin:0 auto}
+.page.active{display:block;animation:fade .3s}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+.page-title{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:28px;flex-wrap:wrap}
+.page-title h1{font-size:44px;font-weight:800;line-height:1;margin-bottom:6px}
+.page-title h1 .hl{background:var(--sky);padding:0 12px;border:var(--border-thin);box-shadow:var(--shadow-sm);border-radius:8px;display:inline-block}
+.page-title h1 .hl-y{background:var(--gold)}
+.page-title h1 .hl-p{background:var(--rose);color:#fff}
+.page-title h1 .hl-m{background:var(--mint)}
+.page-title h1 .hl-v{background:var(--violet);color:#fff}
+.page-title h1 .hl-c{background:var(--coral);color:#fff}
+.page-title .sub{color:var(--ink-soft);font-size:14px}
+
+.btn{
+  font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14px;
+  padding:10px 18px;border-radius:999px;border:var(--border-thin);
+  background:#000;color:#fff;cursor:pointer;transition:all .12s;
+  display:inline-flex;align-items:center;gap:6px;
+}
+.btn:hover{transform:translate(-2px,-2px);box-shadow:var(--shadow)}
+.btn-yellow{background:var(--gold);color:#000}
+.btn-coral{background:var(--coral);color:#fff}
+.btn-mint{background:var(--mint);color:#000}
+.btn-outline{background:#fff;color:#000}
+.btn-sm{padding:6px 12px;font-size:12px}
+
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+@media(max-width:1100px){
+  .grid-2,.grid-3,.grid-4{grid-template-columns:1fr}
+}
+
+/* ---------- CARD ---------- */
+.card{
+  background:#fff;border:var(--border);border-radius:var(--radius);
+  box-shadow:var(--shadow);overflow:hidden;
+}
+.card-header{
+  padding:14px 18px;border-bottom:var(--border-thin);
+  display:flex;justify-content:space-between;align-items:center;gap:8px;
+}
+.card-header h3{font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;letter-spacing:0.02em;text-transform:uppercase}
+.card-header .sub{font-size:11px;color:var(--ink-soft);font-weight:500}
+.card-header .badge{
+  background:#000;color:#fff;font-size:11px;padding:2px 8px;border-radius:999px;
+  font-family:'JetBrains Mono',monospace;font-weight:600;
+}
+.card-body{padding:18px}
+.card-header.cyan{background:var(--sky)}
+.card-header.yellow{background:var(--gold)}
+.card-header.mint{background:var(--mint)}
+.card-header.rose{background:var(--rose);color:#fff}
+.card-header.violet{background:var(--violet);color:#fff}
+.card-header.coral{background:var(--coral);color:#fff}
+.card-header.lime{background:var(--lime)}
+.card-header.dark{background:var(--dark);color:#fff}
+.card-header .sub.c{color:rgba(255,255,255,0.85)}
+
+/* ---------- TAGS ---------- */
+.tag{
+  display:inline-block;padding:3px 10px;border-radius:999px;
+  font-size:11px;font-weight:700;letter-spacing:0.04em;text-transform:uppercase;
+  border:2px solid #000;
+}
+.tag-yellow{background:var(--gold);color:#000}
+.tag-mint{background:var(--mint);color:#000}
+.tag-cyan{background:var(--sky);color:#000}
+.tag-rose{background:var(--rose);color:#fff}
+.tag-violet{background:var(--violet);color:#fff}
+.tag-lime{background:var(--lime);color:#000}
+.tag-grey{background:#EAEAEA;color:#000}
+.tag-black{background:#000;color:#fff}
+
+/* ---------- LIST ITEM WITH BAR ---------- */
+.item{
+  padding:12px 0;border-bottom:1px solid #eee;display:flex;gap:12px;
+}
+.item:last-child{border-bottom:none}
+.item::before{
+  content:'';width:5px;background:#000;border-radius:3px;flex-shrink:0;
+  min-height:36px;
+}
+.item-body{flex:1;min-width:0}
+.item-title{font-weight:700;font-size:14px;margin-bottom:2px}
+.item-meta{font-size:12px;color:var(--ink-soft)}
+
+.counter{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:22px;height:22px;background:#000;color:#fff;
+  border-radius:999px;font-size:11px;padding:0 6px;font-weight:700;
+  font-family:'JetBrains Mono',monospace;
+}
+</style>
+</head>
+<body>
+
+<!-- ============== HEADER ============== -->
+<header class="topbar">
+  <div class="brand">
+    <div class="brand-name">CLIENT FLOW <span class="hl">BD</span></div>
+    <div class="brand-tag">CEO COMMAND CENTRE</div>
+  </div>
+  <nav class="nav" id="nav">
+    <button data-page="home" class="active">🏠 Home</button>
+    <button data-page="social">📊 Social Intel</button>
+    <button data-page="calendar">📅 Content</button>
+    <button data-page="investments">💰 Investments</button>
+    <button data-page="clients">👥 Clients</button>
+    <button data-page="leads">🎯 Leads</button>
+    <button data-page="research">🔬 Research</button>
+    <button data-page="memory">💾 Memory Vault</button>
+    <button data-page="team">👷 Team</button>
+  </nav>
+</header>
+
+<!-- ============== HOME ============== -->
+<section class="page active" id="page-home">
+  <div class="page-title">
+    <div>
+      <h1>ASIF'S <span class="hl">COMMAND</span> CENTRE</h1>
+      <div class="sub">Daily hub · Updated by AI Manager Agent · Every 6h</div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-outline btn-sm">🔄 Refresh</button>
+      <button class="btn btn-sm">＋ New Task</button>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div style="display:flex;flex-direction:column;gap:20px">
+
+      <div class="card">
+        <div class="card-header cyan">
+          <div>
+            <h3>📅 CALENDAR</h3>
+            <div class="sub">Today & tomorrow</div>
+          </div>
+          <span class="badge">4 EVENTS</span>
+        </div>
+        <div class="card-body">
+          <div class="item">
+            <div class="item-body">
+              <div class="item-title">Client Flow BD — Weekly Team Standup</div>
+              <div class="item-meta">Today · 09:30 AM · Google Meet</div>
+            </div>
+          </div>
+          <div class="item">
+            <div class="item-body">
+              <div class="item-title">Client Kickoff — Acme Corp</div>
+              <div class="item-meta">Today · 11:00 AM · Zoom</div>
+            </div>
+          </div>
+          <div class="item">
+            <div class="item-body">
+              <div class="item-title">AI Agent Architecture Review</div>
+              <div class="item-meta">Today · 04:30 PM · Notion doc</div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--ink-soft);margin:14px 0 8px;font-weight:700;letter-spacing:0.08em">TOMORROW — SATURDAY</div>
+          <div class="item">
+            <div class="item-body">
+              <div class="item-title">Proposal Review — Nexus Ltd</div>
+              <div class="item-meta">09:00 AM · Conference Room</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header yellow">
+          <div>
+            <h3>✅ TO-DO</h3>
+            <div class="sub">3 remaining today</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div style="display:flex;gap:8px;margin-bottom:14px">
+            <input type="text" placeholder="Add a task..." style="flex:1;padding:9px 12px;border:var(--border-thin);border-radius:8px;font-family:'Inter',sans-serif;font-size:13px">
+            <button class="btn btn-sm">Add</button>
+          </div>
+          <div class="item" style="border-bottom:1px solid #eee">
+            <input type="checkbox" style="width:16px;height:16px;margin-top:3px;accent-color:#000">
+            <div class="item-body">
+              <div class="item-title">Reply to Nexus Ltd proposal</div>
+              <div class="item-meta">High priority · Due 5 PM</div>
+            </div>
+            <button class="btn btn-outline btn-sm" style="padding:2px 6px">✕</button>
+          </div>
+          <div class="item" style="border-bottom:1px solid #eee">
+            <input type="checkbox" style="width:16px;height:16px;margin-top:3px;accent-color:#000">
+            <div class="item-body">
+              <div class="item-title">Review Bonolota bug fixes</div>
+              <div class="item-meta">QA task</div>
+            </div>
+            <button class="btn btn-outline btn-sm" style="padding:2px 6px">✕</button>
+          </div>
+          <div class="item">
+            <input type="checkbox" style="width:16px;height:16px;margin-top:3px;accent-color:#000">
+            <div class="item-body">
+              <div class="item-title">Prepare Client Flow BD LinkedIn post</div>
+              <div class="item-meta">Marketing</div>
+            </div>
+            <button class="btn btn-outline btn-sm" style="padding:2px 6px">✕</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header lime">
+          <div>
+            <h3>🧠 WEIRD KNOWLEDGE</h3>
+            <div class="sub">Something new every day</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <span class="tag tag-cyan">TECH</span>
+          <div style="font-weight:700;margin:10px 0 6px;font-size:15px">The First Computer Bug Was Literally a Bug</div>
+          <div style="font-size:13px;color:var(--ink-soft);line-height:1.6">
+            1947 সালে Grace Hopper-এর কম্পিউটারে একটি <strong>আসল মশা</strong> ঢুকে যাই এবং সার্কিটে short circuit ঘটায়। ওকে <span class="mono">tape</span>-এ পেস্ট করিয়ে রাখা হয় — সেই জিনিসটাই "computer bug" নামে জন্ম নেয়。৭৮ বছর পরও আমরা একই শব্দ ব্যবহার করি।
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:20px">
+
+      <div class="card">
+        <div class="card-header rose">
+          <div>
+            <h3>📖 BOOK NOTES</h3>
+            <div class="sub c">Daily lesson · rotates every day</div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div style="font-size:14px;line-height:1.7;font-style:italic;color:#222">
+            "The most common way people give up their power is by thinking they don't have any."
+          </div>
+          <div style="height:1px;background:#eee;margin:14px 0"></div>
+          <div style="font-size:13px;color:var(--ink-soft);margin-bottom:14px">
+            Power in software agencies isn't headcount — it's leverage. One CEO + 5 AI agents can outperform a 30-person traditional agency if systems are designed well. That's the game.
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span class="tag tag-rose">THE STARTUP WON'T SCALE</span>
+            <span style="font-size:11px;color:var(--ink-soft)">Julie Zhu · Daily rotation</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header mint">
+          <div>
+            <h3>📰 INSIGHTS FROM NEWSLETTER</h3>
+            <div class="sub">Latest · agent@clientflowbd.com</div>
+          </div>
+          <span class="badge" style="background:#000">6H CYCLE</span>
+        </div>
+        <div class="card-body" style="padding:0">
+          <div class="item">
+            <div class="item-body">
+              <div class="item-title">Anthropic releases Claude 5 Opus — 2x reasoning, 40% cheaper</div>
+              <div class="item-meta">Major agent cost drop expected. Consider migrating Client Flow BD research agent to this model.</div>
+              <div style="margin-top:6px"><span class="tag tag-yellow">THE NEURON</span> <span class="tag tag-grey">AI</span></div>
+            </div>
+            <div style="font-size:11px;color:var(--ink-soft);align-self:flex-start">2h ago</div>
+          </div>
+          <div class="item">
+            <div class="item-body">
+              <div class="item-title">BD SaaS funding hits $28M — 4 startups raised Series A this week</div>
+              <div class="item-meta">Local market window opening for software agency partnerships.</div>
+              <div style="margin-top:6px"><span class="tag tag-violet">THE HUSTLE</span> <span class="tag tag-grey">BD</span></div>
+            </div>
+            <div style="font-size:11px;color:var(--ink-soft);align-self:flex-start">3h ago</div>
+          </div>
+          <div class="item">
+            <div class="item-body">
+              <div class="item-title">React 20 RC — Server Components default in new projects</div>
+              <div class="item-meta">Relevant for Client Flow BD tech stack. Plan migration guide.</div>
+              <div style="margin-top:6px"><span class="tag tag-cyan">SUPERHUMAN</span> <span class="tag tag-grey">DEV</span></div>
+            </div>
+            <div style="font-size:11px;color:var(--ink-soft);align-self:flex-start">5h ago</div>
+          </div>
+          <div class="item">
+            <div class="item-body">
+              <div class="item-title">Bangladesh e-commerce crosses $14B — 34% YoY growth</div>
+              <div class="item-meta">Market expansion signal for premium templates niche.</div>
+              <div style="margin-top:6px"><span class="tag tag-mint">TICKER</span> <span class="tag tag-grey">MARKET</span></div>
+            </div>
+            <div style="font-size:11px;color:var(--ink-soft);align-self:flex-start">6h ago</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== SOCIAL INTEL ============== -->
+<section class="page" id="page-social">
+  <div class="page-title">
+    <div>
+      <h1>SOCIAL <span class="hl">INTEL</span></h1>
+      <div class="sub">Brands sponsoring your competitors · Auto-scan daily 9 AM</div>
+    </div>
+    <button class="btn btn-yellow">⚡ Scan All Now</button>
+  </div>
+
+  <div style="margin-bottom:14px;font-weight:700;font-size:13px;letter-spacing:0.06em">YOUR REACH</div>
+  <div class="grid-4" style="margin-bottom:32px">
+    <div class="card">
+      <div class="card-header rose"><h3>YOUTUBE</h3><span class="tag tag-black" style="border:none">Edit</span></div>
+      <div class="card-body">
+        <div style="font-size:32px;font-weight:800;font-family:'Space Grotesk'">2.4K</div>
+        <div style="font-size:11px;color:var(--ink-soft);font-weight:600;letter-spacing:0.08em">SUBSCRIBERS</div>
+        <div style="margin-top:14px;padding-top:10px;border-top:1px solid #eee;font-size:12px">@clientflowbd ↗</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header yellow"><h3>LINKEDIN</h3><span class="tag tag-black" style="border:none">Edit</span></div>
+      <div class="card-body">
+        <div style="font-size:32px;font-weight:800;font-family:'Space Grotesk'">8.1K</div>
+        <div style="font-size:11px;color:var(--ink-soft);font-weight:600;letter-spacing:0.08em">FOLLOWERS</div>
+        <div style="margin-top:14px;padding-top:10px;border-top:1px solid #eee;font-size:12px">in/clientflowbd ↗</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header cyan"><h3>FACEBOOK</h3><span class="tag tag-black" style="border:none">Edit</span></div>
+      <div class="card-body">
+        <div style="font-size:32px;font-weight:800;font-family:'Space Grotesk'">12.3K</div>
+        <div style="font-size:11px;color:var(--ink-soft);font-weight:600;letter-spacing:0.08em">PAGE LIKES</div>
+        <div style="margin-top:14px;padding-top:10px;border-top:1px solid #eee;font-size:12px">/clientflowbd ↗</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header violet"><h3>INSTAGRAM</h3><span class="tag tag-black" style="border:none">Edit</span></div>
+      <div class="card-body">
+        <div style="font-size:32px;font-weight:800;font-family:'Space Grotesk'">5.7K</div>
+        <div style="font-size:11px;color:var(--ink-soft);font-weight:600;letter-spacing:0.08em">FOLLOWERS</div>
+        <div style="margin-top:14px;padding-top:10px;border-top:1px solid #eee;font-size:12px">@clientflowbd ↗</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2" style="grid-template-columns:1fr 2fr">
+    <div>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div style="font-weight:700;font-size:13px;letter-spacing:0.06em">COMPETITOR CHANNELS <span class="counter">7</span></div>
+        <button class="btn btn-yellow btn-sm">+ Add</button>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="card" style="padding:12px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div>
+              <div style="font-weight:700;font-size:13px">CodeRising BD</div>
+              <div style="font-size:11px;color:var(--ink-soft)">Yesterday · 22v</div>
+            </div>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-yellow btn-sm" style="padding:4px 10px">Scan</button>
+              <button class="btn btn-outline btn-sm" style="padding:4px 8px">✕</button>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="padding:12px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div>
+              <div style="font-weight:700;font-size:13px">BD Software Hub</div>
+              <div style="font-size:11px;color:var(--ink-soft)">2 days · 18v</div>
+            </div>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-yellow btn-sm" style="padding:4px 10px">Scan</button>
+              <button class="btn btn-outline btn-sm" style="padding:4px 8px">✕</button>
+            </div>
+          </div>
+        </div>
+        <div class="card" style="padding:12px">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div>
+              <div style="font-weight:700;font-size:13px">TechDhaka</div>
+              <div style="font-size:11px;color:var(--ink-soft)">3 days · 45v</div>
+            </div>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-yellow btn-sm" style="padding:4px 10px">Scan</button>
+              <button class="btn btn-outline btn-sm" style="padding:4px 8px">✕</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div style="font-weight:700;font-size:13px;letter-spacing:0.06em;margin-bottom:14px">SPONSOR LEADS <span class="counter">14</span></div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-body">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+              <div style="font-weight:700;font-size:15px">Sreem · ↗</div>
+              <span class="tag tag-mint">FINANCE</span>
+            </div>
+            <div style="font-size:12px;color:var(--ink-soft);margin-bottom:10px">Digital lending platform — growing fast in BD market</div>
+            <div style="font-size:11px;color:var(--ink-soft);border:1px solid #eee;padding:4px 10px;border-radius:999px;display:inline-block">2 competitors · 3 videos</div>
+            <div style="margin-top:10px;padding-top:10px;border-top:1px solid #eee;font-size:11px;color:var(--ink-soft)">↗ CodeRising BD</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+              <div style="font-weight:700;font-size:15px">bKash · ↗</div>
+              <span class="tag tag-mint">FINANCE</span>
+            </div>
+            <div style="font-size:12px;color:var(--ink-soft);margin-bottom:10px">Dominant fintech player — heavy tech investment</div>
+            <div style="font-size:11px;color:var(--ink-soft);border:1px solid #eee;padding:4px 10px;border-radius:999px;display:inline-block">1 competitor · 5 videos</div>
+            <div style="margin-top:10px;padding-top:10px;border-top:1px solid #eee;font-size:11px;color:var(--ink-soft)">↗ TechDhaka</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+              <div style="font-weight:700;font-size:15px">Chaldari · ↗</div>
+              <span class="tag tag-cyan">RETAIL</span>
+            </div>
+            <div style="font-size:12px;color:var(--ink-soft);margin-bottom:10px">Premium e-commerce — needs custom SaaS integration</div>
+            <div style="font-size:11px;color:var(--ink-soft);border:1px solid #eee;padding:4px 10px;border-radius:999px;display:inline-block">1 competitor · 2 videos</div>
+            <div style="margin-top:10px;padding-top:10px;border-top:1px solid #eee;font-size:11px;color:var(--ink-soft)">↗ BD Software Hub</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-body">
+            <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+              <div style="font-weight:700;font-size:15px">Shohoz · ↗</div>
+              <span class="tag tag-rose">SAAS</span>
+            </div>
+            <div style="font-size:12px;color:var(--ink-soft);margin-bottom:10px">HR management platform — direct client match</div>
+            <div style="font-size:11px;color:var(--ink-soft);border:1px solid #eee;padding:4px 10px;border-radius:999px;display:inline-block">1 competitor · 1 video</div>
+            <div style="margin-top:10px;padding-top:10px;border-top:1px solid #eee;font-size:11px;color:var(--ink-soft)">↗ CodeRising BD</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== CONTENT CALENDAR ============== -->
+<section class="page" id="page-calendar">
+  <div class="page-title">
+    <div>
+      <h1>CONTENT <span class="hl-y">CALENDAR</span></h1>
+      <div class="sub">Idea → Record → Edit → Ready to Publish</div>
+    </div>
+    <div style="display:flex;gap:14px;font-size:12px;color:var(--ink-soft)">
+      <span>🟡 Recorded: 3</span>
+      <span>🟣 In Edit: 1</span>
+      <span>🟢 Ready: 0</span>
+    </div>
+  </div>
+
+  <div class="grid-4">
+    <div class="card" style="background:#F0F4FA">
+      <div style="padding:12px 14px;border-bottom:var(--border-thin);display:flex;justify-content:space-between;background:#fff">
+        <h3 style="font-size:14px;font-weight:700">💡 Idea</h3>
+        <span class="counter" style="background:#4D7EFF">0</span>
+      </div>
+      <div style="padding:14px">
+        <div style="border:2px dashed #ccc;padding:20px;text-align:center;color:var(--ink-muted);font-size:12px;border-radius:8px">+ Add</div>
+      </div>
+    </div>
+    <div class="card" style="background:#FFF8E6">
+      <div style="padding:12px 14px;border-bottom:var(--border-thin);display:flex;justify-content:space-between;background:#fff">
+        <h3 style="font-size:14px;font-weight:700">🎬 Recorded</h3>
+        <span class="counter" style="background:#D4A10E">3</span>
+      </div>
+      <div style="padding:14px;display:flex;flex-direction:column;gap:10px">
+        <div class="card" style="padding:12px;background:#fff;box-shadow:var(--shadow-sm)">
+          <div style="font-weight:700;font-size:13px;margin-bottom:4px">AI Office Automation Explained</div>
+          <div style="font-size:11px;color:var(--ink-soft);margin-bottom:10px">22 Sep · 14 min</div>
+          <div style="display:flex;gap:4px">
+            <button class="btn btn-outline btn-sm" style="padding:3px 8px">←</button>
+            <button class="btn btn-outline btn-sm" style="padding:3px 8px">→</button>
+            <button class="btn btn-outline btn-sm" style="padding:3px 8px">Edit</button>
+            <button class="btn btn-outline btn-sm" style="padding:3px 8px;color:#ff4444">✕</button>
+          </div>
+        </div>
+        <div class="card" style="padding:12px;background:#fff;box-shadow:var(--shadow-sm)">
+          <div style="font-weight:700;font-size:13px;margin-bottom:4px">Client Flow BD — Day 100</div>
+          <div style="font-size:11px;color:var(--ink-soft);margin-bottom:10px">23 Sep · 10 min</div>
+          <div style="display:flex;gap:4px">
+            <button class="btn btn-outline btn-sm" style="padding:3px 8px">←</button>
+            <button class="btn btn-outline btn-sm" style="padding:3px 8px">→</button>
+            <button class="btn btn-outline btn-sm" style="padding:3px 8px">Edit</button>
+            <button class="btn btn-outline btn-sm" style="padding:3px 8px;color:#ff4444">✕</button>
+          </div>
+        </div>
+        <div class="card" style="padding:12px;background:#fff;box-shadow:var(--shadow-sm)">
+          <div style="font-weight:700;font-size:13px;margin-bottom:4px">Building BD's First AI Agency</div>
+          <div style="font-size:11px;color:var(--ink-soft);margin-bottom:10px">25 Sep · 18 min</div>
+          <div style="display:flex;gap:4px">
+            <button class="btn btn-outline btn-sm" style="padding:3px 8px">←</button>
+            <button class="btn btn-outline btn-sm" style="padding:3px 8px">→</button>
+            <button class="btn btn-outline btn-sm" style="padding:3px 8px">Edit</button>
+            <button class="btn btn-outline btn-sm" style="padding:3px 8px;color:#ff4444">✕</button>
+          </div>
+        </div>
+        <div style="border:2px dashed #ccc;padding:14px;text-align:center;color:var(--ink-muted);font-size:12px;border-radius:8px">+ Add</div>
+      </div>
+    </div>
+    <div class="card" style="background:#F3EDFA">
+      <div style="padding:12px 14px;border-bottom:var(--border-thin);display:flex;justify-content:space-between;background:#fff">
+        <h3 style="font-size:14px;font-weight:700">✏️ In Edit</h3>
+        <span class="counter" style="background:#8B6BD9">1</span>
+      </div>
+      <div style="padding:14px">
+        <div class="card" style="padding:12px;background:#fff;box-shadow:var(--shadow-sm)">
+          <div style="font-weight:700;font-size:13px;margin-bottom:4px">Hermes Agent Setup Guide BD</div>
+          <div style="font-size:11px;color:var(--ink-soft);margin-bottom:10px">24 Sep · 22 min</div>
+          <div style="display:flex;gap:4px">
+            <button class="btn btn-outline btn-sm" style="padding:3px 8px">←</button>
+            <button class="btn btn-outline btn-sm" style="padding:3px 8px">→</button>
+            <button class="btn btn-outline btn-sm" style="padding:3px 8px">Edit</button>
+            <button class="btn btn-outline btn-sm" style="padding:3px 8px;color:#ff4444">✕</button>
+          </div>
+        </div>
+        <div style="border:2px dashed #ccc;padding:14px;text-align:center;color:var(--ink-muted);font-size:12px;border-radius:8px;margin-top:10px">+ Add</div>
+      </div>
+    </div>
+    <div class="card" style="background:#E8FAF0">
+      <div style="padding:12px 14px;border-bottom:var(--border-thin);display:flex;justify-content:space-between;background:#fff">
+        <h3 style="font-size:14px;font-weight:700">🚀 Ready to Publish</h3>
+        <span class="counter" style="background:#3DDC97">0</span>
+      </div>
+      <div style="padding:14px">
+        <div style="border:2px dashed #ccc;padding:40px;text-align:center;color:var(--ink-muted);font-size:12px;border-radius:8px">+ Add</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:32px">
+    <div class="card-header lime">
+      <div>
+        <h3>🎬 VIDEO IDEAS</h3>
+        <div class="sub">AI-researched daily · BD tech trends + global news</div>
+      </div>
+      <span class="badge" style="background:#000">GENERATED 1D AGO</span>
+    </div>
+    <div class="card-body">
+      <div style="display:flex;gap:16px;padding:14px 0;border-bottom:1px solid #eee">
+        <div style="width:32px;height:32px;background:#000;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">1</div>
+        <div>
+          <div style="font-weight:700;margin-bottom:4px">BD-এ প্রথম AI-Native Agency কীভাবে তৈরি করবেন?</div>
+          <div style="font-size:13px;color:var(--ink-soft);margin-bottom:4px">Client Flow BD এর 100-দিন journey breakdown · AI workflow · real numbers</div>
+          <div style="font-size:11px;color:var(--ink-muted);font-style:italic">"Highly relevant for BD tech audience · Practical, not fluff · Timely"</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:16px;padding:14px 0;border-bottom:1px solid #eee">
+        <div style="width:32px;height:32px;background:#000;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">2</div>
+        <div>
+          <div style="font-weight:700;margin-bottom:4px">১ জন CEO + ৫ AI Agent = ৩০ জন মানুষের Agency? Myth বা Reality</div>
+          <div style="font-size:13px;color:var(--ink-soft);margin-bottom:4px">Real cost breakdown, what works, what doesn't — Client Flow BD case study</div>
+          <div style="font-size:11px;color:var(--ink-muted);font-style:italic">"Trending topic globally · Contrarian angle · High share potential"</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:16px;padding:14px 0">
+        <div style="width:32px;height:32px;background:#000;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0">3</div>
+        <div>
+          <div style="font-weight:700;margin-bottom:4px">Hermes Agent Setup Guide — বাংলায় (Free VPS টিপস)</div>
+          <div style="font-size:13px;color:var(--ink-soft);margin-bottom:4px">From zero to AI agent in 20 minutes · Bangla tutorial · BD-friendly hosting</div>
+          <div style="font-size:11px;color:var(--ink-muted);font-style:italic">"Bangla + AI tutorial niche is underserved · Evergreen content"</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== INVESTMENTS ============== -->
+<section class="page" id="page-investments">
+  <div class="page-title">
+    <div>
+      <h1>INVESTMENT <span class="hl-y">TRACKER</span></h1>
+      <div class="sub">Auto-updated daily · Crypto, Stocks, Gold, FD, Land</div>
+    </div>
+    <button class="btn">+ Add Investment</button>
+  </div>
+
+  <div class="card" style="margin-bottom:24px">
+    <div style="background:#000;color:#fff;padding:24px 28px;border-bottom:var(--border-thin);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px">
+      <div>
+        <div style="font-size:11px;letter-spacing:0.15em;color:#FFD96A;font-weight:600">ESTIMATED NET WORTH</div>
+        <div style="font-family:'Space Grotesk';font-size:48px;font-weight:800;line-height:1;margin-top:6px">$ 485,240</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:11px;color:#aaa;letter-spacing:0.08em">VS INVESTED ($ 472,100)</div>
+        <div style="color:#3DDC97;font-family:'JetBrains Mono';font-weight:700;font-size:20px;margin-top:4px">+$13,140 (+2.8%)</div>
+      </div>
+    </div>
+    <div class="grid-3" style="padding:0">
+      <div style="padding:20px 24px;border-right:1px solid #eee">
+        <div style="font-size:11px;letter-spacing:0.08em;color:var(--ink-soft);font-weight:600;margin-bottom:8px">USD HOLDINGS</div>
+        <div style="font-family:'Space Grotesk';font-size:22px;font-weight:700">$28,450</div>
+        <div style="font-size:12px;color:var(--ink-soft);margin-top:4px">Invested: $27,100</div>
+        <div style="color:#3DDC97;font-size:12px;font-weight:700;margin-top:4px">+5.0%</div>
+      </div>
+      <div style="padding:20px 24px;border-right:1px solid #eee">
+        <div style="font-size:11px;letter-spacing:0.08em;color:var(--ink-soft);font-weight:600;margin-bottom:8px">BDT HOLDINGS</div>
+        <div style="font-family:'Space Grotesk';font-size:22px;font-weight:700">৳ 3,850,000</div>
+        <div style="font-size:12px;color:var(--ink-soft);margin-top:4px">Invested: ৳ 3,720,000</div>
+        <div style="color:#3DDC97;font-size:12px;font-weight:700;margin-top:4px">+3.5%</div>
+      </div>
+      <div style="padding:20px 24px">
+        <div style="font-size:11px;letter-spacing:0.08em;color:var(--ink-soft);font-weight:600;margin-bottom:8px">EUR HOLDINGS</div>
+        <div style="font-family:'Space Grotesk';font-size:22px;font-weight:700">€ 84,200</div>
+        <div style="font-size:12px;color:var(--ink-soft);margin-top:4px">Invested: € 82,500</div>
+        <div style="color:#3DDC97;font-size:12px;font-weight:700;margin-top:4px">+2.1%</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-4">
+    <div class="card">
+      <div class="card-header violet"><h3>🪙 CRYPTO</h3></div>
+      <div class="card-body">
+        <div style="font-size:12px;color:var(--ink-soft);letter-spacing:0.06em;font-weight:600">4 POSITIONS</div>
+        <div style="font-family:'Space Grotesk';font-size:24px;font-weight:800;margin:6px 0">$ 28,450</div>
+        <div style="color:#3DDC97;font-weight:700;font-size:13px">+5.0% MoM</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header mint"><h3>📈 STOCKS BD</h3></div>
+      <div class="card-body">
+        <div style="font-size:12px;color:var(--ink-soft);letter-spacing:0.06em;font-weight:600">7 POSITIONS</div>
+        <div style="font-family:'Space Grotesk';font-size:24px;font-weight:800;margin:6px 0">৳ 1,820,000</div>
+        <div style="color:#3DDC97;font-weight:700;font-size:13px">+2.1% MoM</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header cyan"><h3>🌍 STOCKS INTL</h3></div>
+      <div class="card-body">
+        <div style="font-size:12px;color:var(--ink-soft);letter-spacing:0.06em;font-weight:600">12 POSITIONS</div>
+        <div style="font-family:'Space Grotesk';font-size:24px;font-weight:800;margin:6px 0">$ 42,100</div>
+        <div style="color:#FF4F8B;font-weight:700;font-size:13px">-1.2% MoM</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header rose"><h3>🏦 FD + GOLD</h3></div>
+      <div class="card-body">
+        <div style="font-size:12px;color:var(--ink-soft);letter-spacing:0.06em;font-weight:600">3 POSITIONS</div>
+        <div style="font-family:'Space Grotesk';font-size:24px;font-weight:800;margin:6px 0">৳ 2,030,000</div>
+        <div style="color:#3DDC97;font-weight:700;font-size:13px">Stable</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:24px">
+    <div class="card-header dark"><h3>📋 ALL POSITIONS</h3><span class="badge" style="background:#fff;color:#000">27 TOTAL</span></div>
+    <div class="card-body" style="padding:0">
+      <table style="width:100%;border-collapse:collapse;font-size:13px">
+        <thead style="background:#f5f5f5">
+          <tr style="border-bottom:var(--border-thin)">
+            <th style="padding:10px 14px;text-align:left;font-weight:700;font-size:11px;letter-spacing:0.06em">ASSET</th>
+            <th style="padding:10px 14px;text-align:left;font-weight:700;font-size:11px;letter-spacing:0.06em">TYPE</th>
+            <th style="padding:10px 14px;text-align:right;font-weight:700;font-size:11px;letter-spacing:0.06em">CURRENT</th>
+            <th style="padding:10px 14px;text-align:right;font-weight:700;font-size:11px;letter-spacing:0.06em">INVESTED</th>
+            <th style="padding:10px 14px;text-align:right;font-weight:700;font-size:11px;letter-spacing:0.06em">CHANGE</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom:1px solid #eee">
+            <td style="padding:10px 14px;font-weight:600">Bitcoin (BTC)</td>
+            <td style="padding:10px 14px"><span class="tag tag-violet">CRYPTO</span></td>
+            <td style="padding:10px 14px;text-align:right;font-family:'JetBrains Mono'">$14,200</td>
+            <td style="padding:10px 14px;text-align:right;color:var(--ink-soft)">$13,100</td>
+            <td style="padding:10px 14px;text-align:right;color:#3DDC97;font-weight:700">+8.4%</td>
+          </tr>
+          <tr style="border-bottom:1px solid #eee">
+            <td style="padding:10px 14px;font-weight:600">Ethereum (ETH)</td>
+            <td style="padding:10px 14px"><span class="tag tag-violet">CRYPTO</span></td>
+            <td style="padding:10px 14px;text-align:right;font-family:'JetBrains Mono'">$8,520</td>
+            <td style="padding:10px 14px;text-align:right;color:var(--ink-soft)">$8,300</td>
+            <td style="padding:10px 14px;text-align:right;color:#3DDC97;font-weight:700">+2.7%</td>
+          </tr>
+          <tr style="border-bottom:1px solid #eee">
+            <td style="padding:10px 14px;font-weight:600">Bangla Cement PLC</td>
+            <td style="padding:10px 14px"><span class="tag tag-mint">STOCK BD</span></td>
+            <td style="padding:10px 14px;text-align:right;font-family:'JetBrains Mono'">৳ 480,000</td>
+            <td style="padding:10px 14px;text-align:right;color:var(--ink-soft)">৳ 460,000</td>
+            <td style="padding:10px 14px;text-align:right;color:#3DDC97;font-weight:700">+4.3%</td>
+          </tr>
+          <tr style="border-bottom:1px solid #eee">
+            <td style="padding:10px 14px;font-weight:600">Fixed Deposit (3yr)</td>
+            <td style="padding:10px 14px"><span class="tag tag-yellow">FD</span></td>
+            <td style="padding:10px 14px;text-align:right;font-family:'JetBrains Mono'">৳ 1,500,000</td>
+            <td style="padding:10px 14px;text-align:right;color:var(--ink-soft)">৳ 1,400,000</td>
+            <td style="padding:10px 14px;text-align:right;color:#3DDC97;font-weight:700">+7.1%</td>
+          </tr>
+          <tr>
+            <td style="padding:10px 14px;font-weight:600">Gold (10 tola)</td>
+            <td style="padding:10px 14px"><span class="tag tag-rose">GOLD</span></td>
+            <td style="padding:10px 14px;text-align:right;font-family:'JetBrains Mono'">৳ 530,000</td>
+            <td style="padding:10px 14px;text-align:right;color:var(--ink-soft)">৳ 480,000</td>
+            <td style="padding:10px 14px;text-align:right;color:#3DDC97;font-weight:700">+10.4%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============== CLIENTS ============== -->
+<section class="page" id="page-clients">
+  <div class="page-title">
+    <div>
+      <h1>CLIENT <span class="hl-m">MANAGEMENT</span></h1>
+      <div class="sub">5 active clients · MRR ৳ 2,850,000 · 12 projects in dev</div>
+    </div>
+    <button class="btn">+ Add Client</button>
+  </div>
+
+  <div style="display:flex;gap:24px;border-bottom:var(--border-thin);margin-bottom:24px;padding-bottom:0">
+    <button style="padding:10px 0;border:none;border-bottom:3px solid #000;background:none;font-weight:700;font-size:14px;cursor:pointer;font-family:'Space Grotesk'">Active <span style="color:var(--ink-soft);font-weight:500">5</span></button>
+    <button style="padding:10px 0;border:none;border-bottom:1px solid #eee;background:none;color:var(--ink-soft);font-weight:600;font-size:14px;cursor:pointer;font-family:'Space Grotesk'">Expired <span style="font-weight:500">2</span></button>
+    <button style="padding:10px 0;border:none;border-bottom:1px solid #eee;background:none;color:var(--ink-soft);font-weight:600;font-size:14px;cursor:pointer;font-family:'Space Grotesk'">All <span style="font-weight:500">7</span></button>
+  </div>
+
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-body">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+          <div style="font-weight:700;font-size:16px">Acme Corp</div>
+          <span class="tag tag-mint">AUTO</span>
+        </div>
+        <div style="font-size:12px;color:var(--ink-soft);margin-bottom:10px">Contact: Rakesh Roy</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px">
+          <span class="tag tag-cyan">SAAS</span>
+          <span class="tag tag-violet">REACT</span>
+          <span class="tag tag-yellow">PAYMENT</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding-top:12px;border-top:1px solid #eee">
+          <div>
+            <div style="font-size:11px;color:var(--ink-soft)">MRR</div>
+            <div style="font-weight:700;font-size:16px">৳ 850,000</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:11px;color:var(--ink-soft)">LTV</div>
+            <div style="font-weight:700;font-size:16px">৳ 2,550,000</div>
+          </div>
+        </div>
+        <div style="margin-top:12px;padding-top:10px;border-top:1px solid #eee;font-size:11px;color:var(--ink-soft)">Since 10 Jul 2026 · 2.5 mo</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+          <div style="font-weight:700;font-size:16px">Nexus Ltd</div>
+          <span class="tag tag-yellow">MANUAL</span>
+        </div>
+        <div style="font-size:12px;color:var(--ink-soft);margin-bottom:10px">Contact: Sarah Khan</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px">
+          <span class="tag tag-rose">MOBILE</span>
+          <span class="tag tag-mint">FLUTTER</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding-top:12px;border-top:1px solid #eee">
+          <div>
+            <div style="font-size:11px;color:var(--ink-soft)">MRR</div>
+            <div style="font-weight:700;font-size:16px">৳ 450,000</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:11px;color:var(--ink-soft)">LTV</div>
+            <div style="font-weight:700;font-size:16px">৳ 1,800,000</div>
+          </div>
+        </div>
+        <div style="margin-top:12px;padding-top:10px;border-top:1px solid #eee;font-size:11px;color:var(--ink-soft)">Since 22 May 2026 · 4 mo</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+          <div style="font-weight:700;font-size:16px">Bonolota Fashion</div>
+          <span class="tag tag-mint">AUTO</span>
+        </div>
+        <div style="font-size:12px;color:var(--ink-soft);margin-bottom:10px">Contact: Nayan Saha</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px">
+          <span class="tag tag-rose">E-COM</span>
+          <span class="tag tag-cyan">SHOPIFY</span>
+          <span class="tag tag-violet">UI/UX</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding-top:12px;border-top:1px solid #eee">
+          <div>
+            <div style="font-size:11px;color:var(--ink-soft)">MRR</div>
+            <div style="font-weight:700;font-size:16px">৳ 350,000</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:11px;color:var(--ink-soft)">LTV</div>
+            <div style="font-weight:700;font-size:16px">৳ 1,050,000</div>
+          </div>
+        </div>
+        <div style="margin-top:12px;padding-top:10px;border-top:1px solid #eee;font-size:11px;color:var(--ink-soft)">Since 15 Aug 2026 · 1 mo</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+          <div style="font-weight:700;font-size:16px">TechDhaka BD</div>
+          <span class="tag tag-mint">AUTO</span>
+        </div>
+        <div style="font-size:12px;color:var(--ink-soft);margin-bottom:10px">Contact: Farhan Ahmed</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px">
+          <span class="tag tag-cyan">DEV</span>
+          <span class="tag tag-yellow">API</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding-top:12px;border-top:1px solid #eee">
+          <div>
+            <div style="font-size:11px;color:var(--ink-soft)">MRR</div>
+            <div style="font-weight:700;font-size:16px">৳ 120,000</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:11px;color:var(--ink-soft)">LTV</div>
+            <div style="font-weight:700;font-size:16px">৳ 720,000</div>
+          </div>
+        </div>
+        <div style="margin-top:12px;padding-top:10px;border-top:1px solid #eee;font-size:11px;color:var(--ink-soft)">Since 20 Apr 2026 · 5 mo</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-body">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+          <div style="font-weight:700;font-size:16px">Chaldari Digital</div>
+          <span class="tag tag-mint">AUTO</span>
+        </div>
+        <div style="font-size:12px;color:var(--ink-soft);margin-bottom:10px">Contact: Mehedi Hasan</div>
+        <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px">
+          <span class="tag tag-rose">SAAS</span>
+          <span class="tag tag-mint">NODE</span>
+          <span class="tag tag-violet">AWS</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding-top:12px;border-top:1px solid #eee">
+          <div>
+            <div style="font-size:11px;color:var(--ink-soft)">MRR</div>
+            <div style="font-weight:700;font-size:16px">৳ 650,000</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:11px;color:var(--ink-soft)">LTV</div>
+            <div style="font-weight:700;font-size:16px">৳ 1,300,000</div>
+          </div>
+        </div>
+        <div style="margin-top:12px;padding-top:10px;border-top:1px solid #eee;font-size:11px;color:var(--ink-soft)">Since 08 Jun 2026 · 3.5 mo</div>
+      </div>
+    </div>
+
+    <div class="card" style="background:#0F0E17;color:#fff;border-color:#000">
+      <div class="card-body" style="text-align:center;padding:30px">
+        <div style="font-size:32px;margin-bottom:8px">＋</div>
+        <div style="font-weight:700;font-family:'Space Grotesk';margin-bottom:4px">New Client</div>
+        <div style="font-size:12px;color:#aaa">Click to add a new client</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== LEADS ============== -->
+<section class="page" id="page-leads">
+  <div class="page-title">
+    <div>
+      <h1>LEAD <span class="hl-c">PIPELINE</span></h1>
+      <div class="sub">7 active leads · Potential revenue ৳ 1,240,000</div>
+    </div>
+    <button class="btn">+ Add Lead</button>
+  </div>
+
+  <div class="grid-4">
+    <div class="card" style="background:#FFF8E6">
+      <div style="padding:12px 14px;border-bottom:var(--border-thin);display:flex;justify-content:space-between;background:#fff">
+        <h3 style="font-size:14px;font-weight:700">🔍 Focus</h3>
+        <span class="counter" style="background:#FFD96A">1</span>
+      </div>
+      <div style="padding:14px">
+        <div class="card" style="padding:12px;background:#fff;box-shadow:var(--shadow-sm)">
+          <div style="font-weight:700;font-size:13px;margin-bottom:4px">Zomato BD</div>
+          <div style="font-size:11px;color:var(--ink-soft);margin-bottom:8px">₳ 200,000 · API integration</div>
+          <span class="tag tag-cyan">FOOD</span>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="background:#F0F4FA">
+      <div style="padding:12px 14px;border-bottom:var(--border-thin);display:flex;justify-content:space-between;background:#fff">
+        <h3 style="font-size:14px;font-weight:700">📞 Prospect</h3>
+        <span class="counter" style="background:#4D7EFF">2</span>
+      </div>
+      <div style="padding:14px;display:flex;flex-direction:column;gap:8px">
+        <div class="card" style="padding:10px;background:#fff;box-shadow:var(--shadow-sm)">
+          <div style="font-weight:700;font-size:12px;margin-bottom:2px">Shohoz HR</div>
+          <div style="font-size:11px;color:var(--ink-soft)">₳ 180,000</div>
+        </div>
+        <div class="card" style="padding:10px;background:#fff;box-shadow:var(--shadow-sm)">
+          <div style="font-weight:700;font-size:12px;margin-bottom:2px">Foodpanda BD</div>
+          <div style="font-size:11px;color:var(--ink-soft)">₳ 320,000</div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="background:#F3EDFA">
+      <div style="padding:12px 14px;border-bottom:var(--border-thin);display:flex;justify-content:space-between;background:#fff">
+        <h3 style="font-size:14px;font-weight:700">💬 Interested</h3>
+        <span class="counter" style="background:#8B6BD9">2</span>
+      </div>
+      <div style="padding:14px;display:flex;flex-direction:column;gap:8px">
+        <div class="card" style="padding:10px;background:#fff;box-shadow:var(--shadow-sm)">
+          <div style="font-weight:700;font-size:12px;margin-bottom:2px">Bikroy.com</div>
+          <div style="font-size:11px;color:var(--ink-soft)">₳ 150,000</div>
+        </div>
+        <div class="card" style="padding:10px;background:#fff;box-shadow:var(--shadow-sm)">
+          <div style="font-weight:700;font-size:12px;margin-bottom:2px">Pickaboo</div>
+          <div style="font-size:11px;color:var(--ink-soft)">₳ 90,000</div>
+        </div>
+      </div>
+    </div>
+    <div class="card" style="background:#E8FAF0">
+      <div style="padding:12px 14px;border-bottom:var(--border-thin);display:flex;justify-content:space-between;background:#fff">
+        <h3 style="font-size:14px;font-weight:700">✅ Won</h3>
+        <span class="counter" style="background:#3DDC97;color:#000">2</span>
+      </div>
+      <div style="padding:14px;display:flex;flex-direction:column;gap:8px">
+        <div class="card" style="padding:10px;background:#fff;box-shadow:var(--shadow-sm)">
+          <div style="font-weight:700;font-size:12px;margin-bottom:2px">Acme Corp</div>
+          <div style="font-size:11px;color:#3DDC97">₳ 850,000 · Closed</div>
+        </div>
+        <div class="card" style="padding:10px;background:#fff;box-shadow:var(--shadow-sm)">
+          <div style="font-weight:700;font-size:12px;margin-bottom:2px">Chaldari Digital</div>
+          <div style="font-size:11px;color:#3DDC97">₳ 650,000 · Closed</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== RESEARCH ============== -->
+<section class="page" id="page-research">
+  <div class="page-title">
+    <div>
+      <h1>RESEARCH <span class="hl-v">ENGINE</span></h1>
+      <div class="sub">AI-powered deep research · Uses your Claude subscription</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-body" style="padding:32px">
+      <div style="font-family:'Space Grotesk';font-size:24px;font-weight:700;margin-bottom:20px">What do you want to research?</div>
+      <textarea placeholder="e.g. 'Why most BD software companies fail in their first year'" style="width:100%;min-height:120px;padding:16px;border:var(--border-thin);border-radius:10px;font-family:'Inter',sans-serif;font-size:14px;resize:vertical;background:#FBF7F0"></textarea>
+      <div style="display:flex;gap:10px;margin:18px 0;flex-wrap:wrap;align-items:center">
+        <button class="btn" style="padding:10px 22px">🎬 YouTube Script</button>
+        <button class="btn btn-outline" style="padding:10px 22px">💡 Business Idea</button>
+        <button class="btn btn-outline" style="padding:10px 22px">⚖️ Tech Comparison</button>
+        <button class="btn btn-outline" style="padding:10px 22px">📊 Market Analysis</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:18px">
+        <div style="font-size:12px;color:var(--ink-soft);line-height:1.6">
+          Generates detailed research · No fluff · Cited sources<br>
+          <span style="color:var(--ink-muted)">⌘ + Enter to run</span>
+        </div>
+        <button class="btn btn-coral" style="padding:12px 28px;font-size:15px">🔍 Research Now</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:24px">
+    <div class="card-header yellow"><h3>📂 RECENT RESEARCH</h3><span class="badge" style="background:#000">12</span></div>
+    <div class="card-body" style="padding:0">
+      <div class="item" style="padding:14px 18px;border-bottom:1px solid #eee">
+        <div class="item-body">
+          <div class="item-title">BD SaaS startup failure patterns 2020-2026</div>
+          <div class="item-meta">Business Idea · 14 days ago · 3 sources cited</div>
+        </div>
+        <button class="btn btn-outline btn-sm">View</button>
+      </div>
+      <div class="item" style="padding:14px 18px;border-bottom:1px solid #eee">
+        <div class="item-body">
+          <div class="item-title">React vs Next.js for Client Flow BD stack decision</div>
+          <div class="item-meta">Tech Comparison · 21 days ago</div>
+        </div>
+        <button class="btn btn-outline btn-sm">View</button>
+      </div>
+      <div class="item" style="padding:14px 18px">
+        <div class="item-body">
+          <div class="item-title">Premium e-commerce templates BD market size & pricing</div>
+          <div class="item-meta">Market Analysis · 28 days ago</div>
+        </div>
+        <button class="btn btn-outline btn-sm">View</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== MEMORY VAULT ============== -->
+<section class="page" id="page-memory">
+  <div class="page-title">
+    <div>
+      <h1>MEMORY <span class="hl-p">VAULT</span></h1>
+      <div class="sub">Digital journal · Long-term memory · 10-20 year horizon</div>
+    </div>
+  </div>
+
+  <div class="card" style="background:#0F0E17;color:#fff;border-color:#000;margin-bottom:24px;position:relative;overflow:hidden;height:280px">
+    <div style="position:absolute;inset:0">
+      <svg width="100%" height="100%" style="position:absolute;inset:0;opacity:0.4">
+        <line x1="15%" y1="30%" x2="40%" y2="65%" stroke="#8B6BD9" stroke-width="1"/>
+        <line x1="40%" y1="65%" x2="72%" y2="40%" stroke="#3DDC97" stroke-width="1"/>
+        <line x1="72%" y1="40%" x2="85%" y2="75%" stroke="#FFD96A" stroke-width="1"/>
+        <line x1="15%" y1="30%" x2="55%" y2="20%" stroke="#4EC9F1" stroke-width="1"/>
+        <line x1="55%" y1="20%" x2="72%" y2="40%" stroke="#FF4F8B" stroke-width="1"/>
+        <circle cx="15%" cy="30%" r="4" fill="#FF6B4A"/>
+        <circle cx="40%" cy="65%" r="5" fill="#3DDC97"/>
+        <circle cx="72%" cy="40%" r="6" fill="#FFD96A"/>
+        <circle cx="85%" cy="75%" r="4" fill="#8B6BD9"/>
+        <circle cx="55%" cy="20%" r="5" fill="#4EC9F1"/>
+        <circle cx="25%" cy="80%" r="3" fill="#FF4F8B"/>
+        <circle cx="65%" cy="85%" r="4" fill="#FFD96A"/>
+      </svg>
+    </div>
+    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column">
+      <div style="font-family:'Space Grotesk';font-size:22px;font-weight:700;color:#fff;opacity:0.9">23 memories stored</div>
+      <div style="font-size:13px;color:#aaa;margin-top:6px">Sep 2026 · Active journal</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:24px">
+    <div class="card-header dark"><h3>✍️ WHAT'S ON YOUR MIND?</h3></div>
+    <div class="card-body">
+      <textarea placeholder="A business idea, a reminder, a thought, anything..." style="width:100%;min-height:80px;padding:14px;border:var(--border-thin);border-radius:10px;font-family:'Inter',sans-serif;font-size:14px;resize:vertical;background:#FBF7F0"></textarea>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px">
+        <div style="font-size:12px;color:var(--ink-soft)">Saved to Sep 2026 · Searchable forever · ⌘ + Enter</div>
+        <button class="btn">💾 Save Memory</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:24px">
+    <div class="card-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <input type="text" placeholder="🔍 Quick search..." style="padding:12px 14px;border:var(--border-thin);border-radius:10px;font-size:13px">
+        <input type="text" placeholder="💬 Ask naturally — 'that business idea about templates'" style="padding:12px 14px;border:3px solid #8B6BD9;border-radius:10px;font-size:13px;background:#F3EDFA">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-header violet"><h3>📅 SEPT 2026 MEMORIES</h3><span class="badge" style="background:#fff;color:#000">8 entries</span></div>
+    <div class="card-body" style="padding:0">
+      <div class="item" style="padding:14px 18px;border-bottom:1px solid #eee">
+        <div class="item-body">
+          <div class="item-title">Bonolota Fashion bug fixes complete</div>
+          <div class="item-meta">25 Sep · Project · Fixed 3 critical bugs in hero slider + category section</div>
+        </div>
+        <span class="tag tag-mint">PROJECT</span>
+      </div>
+      <div class="item" style="padding:14px 18px;border-bottom:1px solid #eee">
+        <div class="item-body">
+          <div class="item-title">Hermes Desktop + Docker setup working</div>
+          <div class="item-meta">24 Sep · Setup · Full environment ready, auto-starts on boot</div>
+        </div>
+        <span class="tag tag-cyan">SETUP</span>
+      </div>
+      <div class="item" style="padding:14px 18px;border-bottom:1px solid #eee">
+        <div class="item-body">
+          <div class="item-title">Warehouse Phase 1 visual UI complete</div>
+          <div class="item-meta">24 Sep · Warehouse · 9 pages, Neo-Brutalism design</div>
+        </div>
+        <span class="tag tag-yellow">DECISION</span>
+      </div>
+      <div class="item" style="padding:14px 18px">
+        <div class="item-body">
+          <div class="item-title">Client Flow BD day 100 milestone</div>
+          <div class="item-meta">23 Sep · Milestone · 5 active clients, ৳ 2.85M MRR</div>
+        </div>
+        <span class="tag tag-rose">MILESTONE</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============== TEAM ============== -->
+<section class="page" id="page-team">
+  <div class="page-title">
+    <div>
+      <h1>AI <span class="hl">TEAM</span></h1>
+      <div class="sub">5 AI agents · Client Flow BD workforce · All in one Telegram group</div>
+    </div>
+    <button class="btn">+ Add Agent</button>
+  </div>
+
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-header dark">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:36px;height:36px;background:var(--coral);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:14px">M</div>
+          <div>
+            <h3 style="color:#fff">👔 MANAGER AGENT</h3>
+            <div class="sub" style="color:#aaa">SenseNova 6.8 Flash · You are here</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div style="font-size:12px;color:var(--ink-soft);margin-bottom:10px">CEO assistant · Delegates to all other agents · 24/7 available</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px">
+          <span class="tag tag-coral">COORDINATION</span>
+          <span class="tag tag-cyan">MEMORY</span>
+          <span class="tag tag-mint">APPROVALS</span>
+        </div>
+        <div style="font-size:11px;color:var(--ink-soft);border-top:1px solid #eee;padding-top:10px">
+          <div>⚡ Status: <strong style="color:#3DDC97">Online</strong></div>
+          <div style="margin-top:4px">📊 Tasks today: 12</div>
+          <div style="margin-top:4px">📞 Telegram: @clientflow_manager</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header" style="background:var(--violet);color:#fff">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:36px;height:36px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;color:#000;font-size:14px">R</div>
+          <div>
+            <h3 style="color:#fff">🔬 RESEARCH AGENT</h3>
+            <div class="sub" style="color:rgba(255,255,255,0.85)">Claude Sonnet · Deep research & validation</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div style="font-size:12px;color:var(--ink-soft);margin-bottom:10px">Competitor tracking · Market analysis · Tech validation · Newsletter reading</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px">
+          <span class="tag tag-violet">RESEARCH</span>
+          <span class="tag tag-cyan">YOUTUBE</span>
+          <span class="tag tag-yellow">ANALYSIS</span>
+        </div>
+        <div style="font-size:11px;color:var(--ink-soft);border-top:1px solid #eee;padding-top:10px">
+          <div>⚡ Status: <strong style="color:#3DDC97">Online</strong></div>
+          <div style="margin-top:4px">📊 Tasks today: 3</div>
+          <div style="margin-top:4px">📞 Telegram: @clientflow_research</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header" style="background:var(--mint);color:#000">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:36px;height:36px;background:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:14px">D</div>
+          <div>
+            <h3 style="color:#000">💻 DEVELOPER AGENT</h3>
+            <div class="sub">Claude Opus · Code, debug, ship</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div style="font-size:12px;color:var(--ink-soft);margin-bottom:10px">Website development · Bug fixes · GitHub PRs · Code reviews</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px">
+          <span class="tag tag-rose">DEVELOPMENT</span>
+          <span class="tag tag-cyan">BUGFIX</span>
+          <span class="tag tag-violet">DEPLOY</span>
+        </div>
+        <div style="font-size:11px;color:var(--ink-soft);border-top:1px solid #eee;padding-top:10px">
+          <div>⚡ Status: <strong style="color:#3DDC97">Online</strong></div>
+          <div style="margin-top:4px">📊 Tasks today: 5</div>
+          <div style="margin-top:4px">📞 Telegram: @clientflow_dev</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header" style="background:var(--rose);color:#fff">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:36px;height:36px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;color:#000;font-size:14px">M</div>
+          <div>
+            <h3 style="color:#fff">📣 MARKETING AGENT</h3>
+            <div class="sub" style="color:rgba(255,255,255,0.85)">GPT-5 · Content, social, outreach</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div style="font-size:12px;color:var(--ink-soft);margin-bottom:10px">LinkedIn posts · Email outreach · Content calendar · Sponsor tracking</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px">
+          <span class="tag tag-rose">CONTENT</span>
+          <span class="tag tag-mint">EMAIL</span>
+          <span class="tag tag-yellow">SOCIAL</span>
+        </div>
+        <div style="font-size:11px;color:var(--ink-soft);border-top:1px solid #eee;padding-top:10px">
+          <div>⚡ Status: <strong style="color:#3DDC97">Online</strong></div>
+          <div style="margin-top:4px">📊 Tasks today: 2</div>
+          <div style="margin-top:4px">📞 Telegram: @clientflow_marketing</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header yellow">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:36px;height:36px;background:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:14px">Q</div>
+          <div>
+            <h3 style="color:#000">🧪 QA AGENT</h3>
+            <div class="sub">GPT-4o · Test, verify, find bugs</div>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div style="font-size:12px;color:var(--ink-soft);margin-bottom:10px">Automated testing · Bug reports · Browser inspection · Screenshot analysis</div>
+        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px">
+          <span class="tag tag-yellow">QA</span>
+          <span class="tag tag-violet">TESTING</span>
+          <span class="tag tag-cyan">AUDIT</span>
+        </div>
+        <div style="font-size:11px;color:var(--ink-soft);border-top:1px solid #eee;padding-top:10px">
+          <div>⚡ Status: <strong style="color:#FFB64D">Idle</strong></div>
+          <div style="margin-top:4px">📊 Tasks today: 1</div>
+          <div style="margin-top:4px">📞 Telegram: @clientflow_qa</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="background:#0F0E17;color:#fff">
+      <div class="card-body" style="text-align:center;padding:30px">
+        <div style="font-size:32px;margin-bottom:8px">＋</div>
+        <div style="font-weight:700;font-family:'Space Grotesk';margin-bottom:4px">New Agent</div>
+        <div style="font-size:12px;color:#aaa">Add PM · Finance · Legal agent</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+document.querySelectorAll('#nav button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('#nav button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById('page-'+btn.dataset.page).classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+  });
+});
+</script>
+</body>
+</html>
